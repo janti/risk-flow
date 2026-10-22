@@ -1,0 +1,26 @@
+{
+  "name": "@riskflow/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@riskflow/database": "workspace:*",
+    "@riskflow/risk-engine": "workspace:*",
+    "@riskflow/shared": "workspace:*",
+    "bullmq": "^5.61.0",
+    "dotenv": "^16.6.1",
+    "ioredis": "^5.8.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

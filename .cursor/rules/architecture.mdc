@@ -1,0 +1,11 @@
+---
+description: Modular monolith boundaries
+alwaysApply: true
+---
+
+RiskFlow is a modular monolith: `apps/web` owns routes, `apps/worker` owns background jobs, and `packages/*` own domain contracts.
+
+- `packages/ui` may depend on React. Domain packages (`tenant`, `permissions`, `risk-engine`, `form-engine`, `module-registry`, `database`, `auth`, `workflow-engine`, `analytics`) must not.
+- Visual workflow and dashboard builders are out of MVP scope. Model definitions must still be versionable.
+- Follow the table model, permission keys, and `/api/v1` contract in `docs/RISKFLOW_CURSOR_IMPLEMENTATION.md` without undocumented changes.
+- `@riskflow/database` public API is `createTenantDatabase`. Do not export or use a raw `PrismaClient` in route handlers.

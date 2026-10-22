@@ -1,0 +1,14 @@
+---
+description: RiskFlow sprint boundaries
+alwaysApply: true
+---
+
+Implement only the current sprint. The current sprint is Sprint 12.
+
+Do not implement fake login, mock sessions, OpenTelemetry/Sentry, a visual dashboard builder, or a visual workflow canvas. Never expose an unrestricted Prisma client from route handlers. Tenant context uses SET LOCAL / set_config(..., true) inside a transaction. Identity does not imply tenant access. Module enablement is enforced in API and service layers, not only navigation. Entitlements are platform-controlled; tenant admins cannot grant themselves modules. Disabling a module preserves records.
+
+Object storage is private and S3-compatible (local disk adapter is allowed without Docker). Signed URLs expire. Object keys are server-generated and tenant-prefixed; never trust a client-supplied key. Worker jobs use DATABASE_URL_WORKER, SET LOCAL tenant context from the outbox row (not from the user), and moduleIsEnabled before side effects. Outbox processing is idempotent.
+
+Do not add new modules. Instrument journeys with Server-Timing, `/health`, `/ready` and documented local benchmarks, not Sentry/OTel. Accessibility target is WCAG 2.2 AA. Mutations are rate-limited. `audit_events` stays append-only for app/worker; retention purge is an owner-role DBA procedure. Backups use pg_dump without Docker. Never claim compliance certification.
+
+Inspect existing code before modifying it. Keep changes incremental. Do not invent architecture that contradicts `docs/ARCHITECTURE.md`.

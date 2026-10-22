@@ -1,0 +1,14 @@
+---
+description: Security requirements that apply from Sprint 01
+alwaysApply: true
+---
+
+- Never implement fake authentication or mock sessions.
+- Identity does not imply tenant access.
+- Never commit secrets. Use `.env.example` with empty or local-dev-only values.
+- Never trust tenant ID from a JSON body. Tenant comes from verified membership and route slug checks.
+- Default deny for authorization.
+- Platform administrators must not receive automatic access to tenant business data.
+- Do not expose an unrestricted Prisma client from route handlers.
+- Tenant database context uses `SET LOCAL app.tenant_id` inside a transaction, never session-level SET on pooled connections.
+- Domain packages must not depend on React.

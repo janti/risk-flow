@@ -1,0 +1,27 @@
+{
+  "name": "@riskflow/risk-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./guidance": "./src/guidance.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@riskflow/auth": "workspace:*",
+    "@riskflow/database": "workspace:*",
+    "@riskflow/form-engine": "workspace:*",
+    "@riskflow/permissions": "workspace:*",
+    "@riskflow/shared": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,142 @@
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
+  --color-risk-critical: var(--risk-critical);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.004 220);
+  --foreground: oklch(0.22 0.02 240);
+  --card: oklch(0.995 0.002 220);
+  --card-foreground: oklch(0.22 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 240);
+  --primary: oklch(0.42 0.08 210);
+  --primary-foreground: oklch(0.98 0.01 210);
+  --secondary: oklch(0.95 0.01 220);
+  --secondary-foreground: oklch(0.28 0.03 240);
+  --muted: oklch(0.95 0.01 220);
+  --muted-foreground: oklch(0.4 0.02 240);
+  --accent: oklch(0.94 0.02 200);
+  --accent-foreground: oklch(0.28 0.04 210);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.9 0.01 220);
+  --input: oklch(0.9 0.01 220);
+  --ring: oklch(0.42 0.08 210);
+  --risk-low: oklch(0.72 0.12 150);
+  --risk-medium: oklch(0.78 0.14 85);
+  --risk-high: oklch(0.68 0.16 55);
+  --risk-critical: oklch(0.6 0.2 25);
+}
+
+.dark {
+  --background: oklch(0.18 0.02 240);
+  --foreground: oklch(0.97 0.01 220);
+  --card: oklch(0.22 0.02 240);
+  --card-foreground: oklch(0.97 0.01 220);
+  --popover: oklch(0.22 0.02 240);
+  --popover-foreground: oklch(0.97 0.01 220);
+  --primary: oklch(0.78 0.08 200);
+  --primary-foreground: oklch(0.18 0.03 220);
+  --secondary: oklch(0.28 0.02 240);
+  --secondary-foreground: oklch(0.96 0.01 220);
+  --muted: oklch(0.28 0.02 240);
+  --muted-foreground: oklch(0.8 0.02 220);
+  --accent: oklch(0.3 0.03 210);
+  --accent-foreground: oklch(0.96 0.01 210);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.32 0.02 240);
+  --input: oklch(0.32 0.02 240);
+  --ring: oklch(0.78 0.08 200);
+  --risk-low: oklch(0.7 0.12 150);
+  --risk-medium: oklch(0.78 0.12 85);
+  --risk-high: oklch(0.7 0.14 55);
+  --risk-critical: oklch(0.68 0.18 25);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  h1 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  :focus-visible {
+    outline-offset: 2px;
+  }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  select:not(:disabled),
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]),
+  label:has(> input[type="file"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  a[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,74 @@
+import { loadTenantAccess } from "@riskflow/auth";
+import { getTreatmentBundle, submitTreatment, submitTreatmentSchema } from "@riskflow/risk-engine";
+import { ok } from "@riskflow/shared";
+import { z } from "zod";
+import { isErrorResponse, jsonError, requestIdFrom, requireAuthenticatedUser } from "../../../../../../../../lib/api-route";
+import { getAppDatabase } from "../../../../../../../../lib/db";
+import { workflowMutationResponse } from "../../../../../../../../lib/workflow-http";
+
+export const runtime = "nodejs";
+
+const riskIdSchema = z.string().uuid();
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ tenantSlug: string; riskId: string }> },
+): Promise<Response> {
+  const requestId = requestIdFrom(request);
+  const user = await requireAuthenticatedUser(request);
+  if (isErrorResponse(user)) {
+    return user;
+  }
+
+  const { tenantSlug, riskId } = await context.params;
+  if (!riskIdSchema.safeParse(riskId).success) {
+    return jsonError(404, "not_found", "Resurssia ei löytynyt.", requestId);
+  }
+
+  const db = getAppDatabase();
+  const access = await loadTenantAccess(db, { authSubject: user.authSubject, tenantSlug });
+  if (!access) {
+    return jsonError(404, "not_found", "Resurssia ei löytynyt.", requestId);
+  }
+
+  const bundle = await getTreatmentBundle(db, access, riskId);
+  if (typeof bundle === "string") {
+    return workflowMutationResponse(bundle, requestId, "Käsittely on virheellinen.");
+  }
+
+  return Response.json(ok(bundle, { requestId }));
+}
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ tenantSlug: string; riskId: string }> },
+): Promise<Response> {
+  const requestId = requestIdFrom(request);
+  const user = await requireAuthenticatedUser(request);
+  if (isErrorResponse(user)) {
+    return user;
+  }
+
+  const { tenantSlug, riskId } = await context.params;
+  if (!riskIdSchema.safeParse(riskId).success) {
+    return jsonError(404, "not_found", "Resurssia ei löytynyt.", requestId);
+  }
+
+  const db = getAppDatabase();
+  const access = await loadTenantAccess(db, { authSubject: user.authSubject, tenantSlug });
+  if (!access) {
+    return jsonError(404, "not_found", "Resurssia ei löytynyt.", requestId);
+  }
+
+  const parsed = submitTreatmentSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return jsonError(400, "invalid_body", "Käsittely on virheellinen.", requestId, parsed.error.flatten());
+  }
+
+  const saved = await submitTreatment(db, access, riskId, parsed.data, requestId);
+  if (typeof saved === "string") {
+    return workflowMutationResponse(saved, requestId, "Käsittely on virheellinen.");
+  }
+
+  return Response.json(ok({ treatment: saved }, { requestId }), { status: 201 });
+}

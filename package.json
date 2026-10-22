@@ -1,0 +1,47 @@
+{
+  "name": "risk-flow",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Multi-tenant enterprise risk management SaaS",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint && eslint scripts",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:e2e": "playwright test --config=tests/e2e/playwright.config.ts",
+    "services:start": "node scripts/dev-services.mjs start",
+    "services:stop": "node scripts/dev-services.mjs stop",
+    "services:status": "node scripts/dev-services.mjs status",
+    "oidc:start": "node scripts/dev-oidc.mjs",
+    "db:generate": "pnpm --filter @riskflow/database generate",
+    "db:migrate": "pnpm --filter @riskflow/database migrate",
+    "db:seed": "pnpm --filter @riskflow/database seed",
+    "ops:backup": "node scripts/ops-run.mjs backup",
+    "ops:restore-drill": "node scripts/ops-run.mjs restore-drill",
+    "ops:tenant-export": "node scripts/ops-run.mjs tenant-export",
+    "ops:tenant-offboard": "node scripts/ops-run.mjs tenant-offboard",
+    "ops:audit-retention": "node scripts/ops-run.mjs audit-retention",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "embedded-postgres": "16.14.0-beta.17",
+    "express": "^5.1.0",
+    "oidc-provider": "^8.8.1",
+    "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.18.0",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "turbo": "^2.11.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.44.0",
+    "vitest": "^3.2.7"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=22"
+  }
+}
