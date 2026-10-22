@@ -1,50 +1,50 @@
-# Turvallisuus
+# Security
 
-## Voimassa Sprint 01:stä
+## In force from Sprint 01
 
-- Ei valeautentikaatiota, mock-sessioita tai ohitus-tokeneita.
-- Salaisuuksia ei commitoita. `.env.example` sisältää tyhjät tai vain-dev-arvot.
-- `GET /health` ei paljasta ympäristömuuttujia.
-- Domain-paketit eivät riipu Reactista.
-- Perustason suojaotsikot: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`.
-- Sprint 12: `Content-Security-Policy`, tuotannon `Strict-Transport-Security`, `Cross-Origin-Opener-Policy` ja `Cross-Origin-Resource-Policy`.
+- No fake authentication, mock sessions, or bypass tokens.
+- Secrets are not committed. `.env.example` contains empty or local-dev-only values.
+- `GET /health` does not leak environment variables.
+- Domain packages do not depend on React.
+- Baseline security headers: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`.
+- Sprint 12: `Content-Security-Policy`, production `Strict-Transport-Security`, `Cross-Origin-Opener-Policy`, and `Cross-Origin-Resource-Policy`.
 
-## Identiteetti ja tenant
+## Identity and tenant
 
-Identiteetti ei tarkoita tenant-pääsyä. Tenant päätellään todennetusta jäsenyydestä, slug tarkistetaan jäsenyyttä vasten, ja aktiivinen rooli valtuutetaan. JSON-bodyn tenant-tunnisteeseen ei luoteta. UUID:t ovat opaakkeja; palvelin määrää toimijan ja tenantin.
+Identity does not imply tenant access. Tenant is derived from verified membership, the slug is checked against membership, and the active role is authorised. A tenant id in a JSON body is never trusted. UUIDs are opaque; the server determines actor and tenant.
 
-## Valtuutus
+## Authorization
 
-Oikeusavaimet: `risk:read`, `risk:create`, `risk:update`, `risk:archive`, `risk:assess`, `risk:approve`, `action:assign`, `action:complete`, `analytics:read`, `form:manage`, `module:manage`, `users:manage`, `audit:read`.
+Permission keys: `risk:read`, `risk:create`, `risk:update`, `risk:archive`, `risk:assess`, `risk:approve`, `action:assign`, `action:complete`, `analytics:read`, `form:manage`, `module:manage`, `users:manage`, `audit:read`.
 
-Tarkistusjärjestys: jäsenyys, oikeus, org-yksikkö, omistajuus, tietueen näkyvyys. Default deny. Alustan ylläpitäjillä ei ole automaattista lukuoikeutta tenant-liiketoimintadataan.
+Check order: membership, permission, org unit, ownership, record visibility. Default deny. Platform administrators do not get automatic read access to tenant business data.
 
-Sprint 06: `risk:approve` ei salli oman käsittelyn hyväksyntää, kun tenantin `settings_json.separationOfDuties` on päällä. Toimenpiteiden näkyvyys seuraa riskin org-yksikkörajausta.
+Sprint 06: `risk:approve` does not allow approving one's own treatment when the tenant `settings_json.separationOfDuties` flag is on. Action visibility follows the risk's org-unit scope.
 
-Sprint 07: dashboard-aggregaatit ja CSV-vienti käyttävät samoja jäsenyys-, oikeus- ja org-yksikköpredikaatteja kuin listakyselyt. Kaavioiden summat täsmäytetään valtuutettuihin riveihin testeissä. CSV-solut neutralisoidaan kaavainjektiota vastaan.
+Sprint 07: dashboard aggregates and CSV export use the same membership, permission, and org-unit predicates as list queries. Chart totals are reconciled to authorised rows in tests. CSV cells are neutralized against formula injection.
 
-Sprint 08: lomakkeiden hallinta vaatii `form:manage`. Ehdolliset säännöt ovat AST, ei suoritettavaa koodia. Julkaistut `form_versions`-rivit ovat muuttumattomia. Toisen tenantin lomake ei näy eikä ole käytettävissä.
+Sprint 08: form management requires `form:manage`. Conditional rules are AST, not executable code. Published `form_versions` rows are immutable. Another tenant's form is neither visible nor usable.
 
-Sprint 09: moduulin enablement tarkistetaan palvelu- ja API-kerroksessa, ei vain navigaatiossa. Tenant-admin ei voi myöntää itselleen entitlementtia. Pois kytketty moduuli palauttaa `403 module_disabled` suoralle API-kutsulle.
+Sprint 09: module enablement is checked in the service and API layers, not only in navigation. A tenant admin cannot grant themselves an entitlement. A disabled module returns `403 module_disabled` for a direct API call.
 
-Sprint 11: saavutettavuus- ja suorituskykykovennus ei muuta valtuutusmallia. `Server-Timing` paljastaa vain keston, ei SQL:ää. Haku käyttää samoja `risk:read`- ja org-yksikköpredikaatteja kuin lista.
+Sprint 11: accessibility and performance hardening does not change the authorization model. `Server-Timing` exposes duration only, not SQL. Search uses the same `risk:read` and org-unit predicates as the list.
 
-Sprint 12: mutaatiot ja kirjautuminen ovat rate-limitattuja (`429 rate_limited`). `GET /ready` tarkistaa PostgreSQL- ja Redis-yhteydet eikä paljasta ympäristömuuttujia. `audit_events`-retention on owner-roolin DBA-skripti; app/worker eivät voi DELETE/UPDATE. Tenant-offboarding merkitsee tenantin `offboarded` ja jäsenyydet `revoked`. Pentest-checklist: `docs/PENTEST.md`. Sertifiointia ei väitetä.
+Sprint 12: mutations and login are rate-limited (`429 rate_limited`). `GET /ready` checks PostgreSQL and Redis and does not leak environment variables. `audit_events` retention is an owner-role DBA script; app/worker cannot DELETE/UPDATE. Tenant offboarding marks the tenant `offboarded` and memberships `revoked`. Pentest checklist: `docs/PENTEST.md`. Certification is not claimed.
 
-Sprint 10: liiteavaimet ovat palvelimen luomia ja tenant-etuliitteisiä; asiakkaan avaimeen ei luoteta. Lataus- ja upload-URL:t vanhenevat (HMAC, 60 s). Worker käyttää `DATABASE_URL_WORKER`-roolia, SET LOCAL -tenanttia outbox-rivistä ja `moduleIsEnabled`-tarkistusta ennen sivuvaikutuksia. Outbox-käsittely on idempotentti (`dedupeKey` / `processedAt`).
+Sprint 10: attachment keys are server-generated and tenant-prefixed; a client-supplied key is not trusted. Download and upload URLs expire (HMAC, 60 s). The worker uses the `DATABASE_URL_WORKER` role, SET LOCAL tenant from the outbox row, and `moduleIsEnabled` before side effects. Outbox processing is idempotent (`dedupeKey` / `processedAt`).
 
-## Tietokanta
+## Database
 
-Katso `docs/DATABASE.md`. RLS + Prisma-pooling on tunnistettu projektiriski: tenant-konteksti vain `SET LOCAL` transaktiossa, ei session-tasolla.
+See `docs/DATABASE.md`. RLS + Prisma pooling is a known project risk: tenant context only via `SET LOCAL` in a transaction, never session-level.
 
-Sprint 02: tenant-tauluilla on `ENABLE` + `FORCE ROW LEVEL SECURITY`. Ajonaikaiset roolit `riskflow_app` ja `riskflow_worker` ovat `NOSUPERUSER` ja `NOBYPASSRLS`. Reitit käyttävät `createTenantDatabase(...).withTenant(...)`. Raakaa Prisma-asiakasta ei viedä paketista. `audit_events` on append-only (ei UPDATE/DELETE). Muissa ympäristöissä tietokantaroolit luodaan ennen migraatiota omilla salasanoilla.
+Sprint 02: tenant tables have `ENABLE` + `FORCE ROW LEVEL SECURITY`. Runtime roles `riskflow_app` and `riskflow_worker` are `NOSUPERUSER` and `NOBYPASSRLS`. Routes use `createTenantDatabase(...).withTenant(...)`. A raw Prisma client is not exported from the package. `audit_events` is append-only (no UPDATE/DELETE). In other environments, database roles are created with their own passwords before migration.
 
 ## API
 
-Sessio-eväste (Auth.js JWT, httpOnly) ja CSRF (same-origin Origin-tarkistus mutaatioille). Virhevastaukset eivät paljasta toisen tenantin tietueiden olemassaoloa: ei-jäsen saa 404, jäsen ilman oikeutta 403, tunnistautumaton 401. Listat käyttävät keyset-sivutusta. `PATCH` vaatii `version`-kentän ja palauttaa 409 rinnakkaisessa muokkauksessa.
+Session cookie (Auth.js JWT, httpOnly) and CSRF (same-origin Origin check for mutations). Error responses do not reveal another tenant's records: non-member gets 404, member without permission 403, unauthenticated 401. Lists use keyset pagination. `PATCH` requires `version` and returns 409 on concurrent edit.
 
-Alustan ylläpitäjä ei saa automaattista lukuoikeutta tenant-liiketoimintadataan. Peruttu jäsenyys (`status=revoked`) katkaisee pääsyn heti, koska jäsenyys luetaan kannasta joka pyynnössä eikä JWT:stä.
+A platform administrator does not get automatic read access to tenant business data. A revoked membership (`status=revoked`) cuts access immediately because membership is read from the database on every request, not from the JWT.
 
-## Testit
+## Tests
 
-Negatiiviset testit: SELECT/UPDATE/DELETE/INSERT, liitokset, aggregaatit, liitteiden URL:t, jonotyöt ja cross-tenant-viittaukset. IDOR, CSRF, stored XSS, tiedostolataus, CSV-injektio, rate limit ja väärän tenantin välimuistit. Sprint 12: `tests/e2e/security.spec.ts`, `packages/shared/src/rate-limit.test.ts` ja audit-append-only RLS-tapaus.
+Negative tests: SELECT/UPDATE/DELETE/INSERT, joins, aggregates, attachment URLs, jobs, and cross-tenant references. IDOR, CSRF, stored XSS, file upload, CSV injection, rate limit, and wrong-tenant caches. Sprint 12: `tests/e2e/security.spec.ts`, `packages/shared/src/rate-limit.test.ts`, and the audit append-only RLS case.

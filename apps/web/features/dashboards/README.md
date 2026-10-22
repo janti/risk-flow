@@ -1,3 +1,3 @@
 # features/dashboards
 
-Roolikohtaiset dashboardit Sprint 07:ssä. Visual Dashboard Builder ei kuulu MVP:hen.
+Role-specific dashboards in Sprint 07. A visual Dashboard Builder is not in MVP.

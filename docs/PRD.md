@@ -1,34 +1,34 @@
-# Tuotevaatimukset
+# Product requirements
 
-RiskFlow on toimialariippumaton, tietokantapohjainen ja monitoiminen yritysriskien hallinnan SaaS.
+RiskFlow is an industry-neutral, database-backed, multi-tenant enterprise risk management SaaS.
 
-## Ensimmäisen pilotti-MVP:n kyvykkyydet
+## First pilot MVP capabilities
 
-- tenant voi luoda ja arvioida riskejä
-- toimenpiteiden osoittaminen
-- riskikäsittelyjen hyväksyntä
-- roolikohtaiset dashboardit
-- riskilomakkeiden räätälöinti
-- oikeutettujen moduulien kytkeminen
+- a tenant can create and assess risks
+- action assignment
+- approval of risk treatments
+- role-specific dashboards
+- customization of risk forms
+- enabling entitled modules
 
-Kaikki liiketoimintadata on tenant-eristettyä. Rutiininomainen tenant-konfiguraatio ei vaadi toimittajan työpanosta. Mallimäärittelyt ovat versionoitavia ensimmäisestä päivästä.
+All business data is tenant-isolated. Routine tenant configuration does not require vendor work. Model definitions are versionable from day one.
 
 ## Definition of done
 
-Jokainen ominaisuus täyttää nämä ehdot:
+Every feature must meet these conditions:
 
-- autentikointi ja tenant-jäsenyys pakotetaan palvelimella
-- valtuutus tarkistetaan per operaatio ja tietue
-- Zod-validointi, tyypitetyt virheet, listojen sivutus
-- testit: positiivinen, kielletty, väärä tenant, virheellinen syöte
-- audit-tapahtumat turvallisuus- ja liiketoimintakirjoituksille
-- saavutettavuus: labelit, fokusjärjestys, näppäimistö, kontrasti, tyhjä/lataus/virhe
-- typecheck, lint ja testit vihreinä; ei salaisuuksia repositoriossa
+- authentication and tenant membership enforced on the server
+- authorization checked per operation and record
+- Zod validation, typed errors, pagination on lists
+- tests: positive, forbidden, wrong tenant, invalid input
+- audit events for security-relevant and business writes
+- accessibility: labels, focus order, keyboard, contrast, empty/loading/error
+- typecheck, lint and tests green; no secrets in the repository
 
-## Sprint 01 -toimitus
+## Sprint 01 delivery
 
-Käyttäjä voi avata proto-kuoren, vaihtaa teemaa ja navigoida paikkamerkkisivuille. Tunnistautumista, tenant-dataa tai valtuutusta ei luvata.
+A user can open the prototype shell, switch theme, and navigate placeholder pages. Authentication, tenant data, or authorization are not promised.
 
-## MVP:n ulkopuolella
+## Out of MVP scope
 
-Visuaalinen työnkulkueditori, Dashboard Builder, julkiset API/webhookit, SAML/SCIM, kehittyneet compliance-mappingit, kolmannen osapuolen riski, BIA/BCM, tekoälyavustaja, kontrollikirjasto, erilliset tenant-tietokannat, white-label-domainit, raporttisuunnittelija ja yritysbilling. Arkkitehtuuri jättää niille tilaa, mutta niitä ei toteuteta ennenaikaisesti.
+Visual workflow editor, Dashboard Builder, public APIs/webhooks, SAML/SCIM, advanced compliance mapping, third-party risk, BIA/BCM, AI assistant, control library, separate tenant databases, white-label domains, report designer, and enterprise billing. Architecture leaves room for them; they are not implemented early.

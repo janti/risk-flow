@@ -1,83 +1,83 @@
-# Arkkitehtuuri
+# Architecture
 
-RiskFlow on **modulaarinen monolitti**. Yksi Next.js-sovellus palvelee tenant-käyttöliittymän ja `/api/v1`-rajapinnan. Domain-logiikka asuu paketeissa, joilla ei ole React-riippuvuutta. Taustatyöt ajetaan erillisessä worker-prosessissa.
+RiskFlow is a **modular monolith**. One Next.js application serves the tenant UI and `/api/v1`. Domain logic lives in packages with no React dependency. Background jobs run in a separate worker process.
 
-## Nykytila (Sprintit 01–12)
+## Current state (Sprints 01–12)
 
-Toteutettu:
+Implemented:
 
-- pnpm-workspace ja Turborepo
-- `apps/web` Next.js App Routerilla, Tailwindilla ja shadcn/ui-pohjaisella design systemillä
-- responsiivinen `AppShell` tenant-reiteille `/t/[tenantSlug]/...`
+- pnpm workspace and Turborepo
+- `apps/web` with Next.js App Router, Tailwind, and a shadcn/ui-based design system
+- responsive `AppShell` for tenant routes `/t/[tenantSlug]/...`
 - `GET /health`
-- paikallinen PostgreSQL 16 ja Redis ilman Dockeria (`pnpm services:start`)
-- worker (BullMQ): outbox-tyhjennys, myöhässä olevat muistutukset ja liitteiden scan-tila
-- CI: typecheck, lint, unit-testit, Playwright
-- Prisma-skeema, SQL-migraatiot, FORCE RLS ja tenant-transaktiokääre (`set_config(..., true)`)
-- Auth.js + OIDC, jäsenyystarkistus, roolipresetit, kutsut ja suora käyttäjälisäys
-- riskirekisterin CRUD, optimistic concurrency, audit-tapahtumat ja org-yksikkörajaus
-- versionoidut 3x3/5x5-pisteytysmallit, muuttumattomat inherent/residual-arvioinnit ja valtuutettu heatmap
-- käsittelystrategiat, toimenpiteet, hyväksyntävaiheet, tehtävien eriyttäminen ja transaktionaalinen outbox
-- roolipohjaiset dashboardit ja valtuutetut aggregaatit (`packages/analytics`): KPI, heatmap, kategoriat, kuukausitrendit, myöhässä olevat toimenpiteet ja scoped CSV-vienti
-- dynaamiset lomakkeet (`packages/form-engine`): tenant-kohtaiset määrittelyt, muuttumattomat julkaistut versiot, AST-ehdot ja metadataohjattu renderer
-- moduulirekisteri (`packages/module-registry`): katalogi, alustan entitlementit, tenant-kytkimet, riippuvuudet ja API-kerroksen enablement
-- organisaatiopuu, roolioikeusmatriisi sekä locale/branding (`packages/auth`)
-- WCAG 2.2 AA -kovennus, globaali riskihaku, listaindeksit ja `Server-Timing` (Sprint 11). Mittaukset: `docs/PERFORMANCE.md`, saavutettavuus: `docs/ACCESSIBILITY.md`.
-- Kategoriakohtaiset standardiohjeet (ISO 31000/27001/45001, NIST CSF 2.0, työsuojelu) rekisterissä, arvioinnissa ja käsittelyssä. Ei compliance-mapping-moduulia: `docs/STANDARDS.md`.
-- Sprint 12: `GET /ready`, mutaatioiden rate limit, CSP/HSTS, varmuuskopio/restore-drill, tenant-vienti/offboarding, incident- ja deploy-runbookit. Monitorointi ilman Sentry/OTel. Go/no-go: `docs/GO_NO_GO.md`.
+- local PostgreSQL 16 and Redis without Docker (`pnpm services:start`)
+- worker (BullMQ): outbox drain, overdue reminders, and attachment scan state
+- CI: typecheck, lint, unit tests, Playwright
+- Prisma schema, SQL migrations, FORCE RLS, and tenant transaction wrapper (`set_config(..., true)`)
+- Auth.js + OIDC, membership checks, role presets, invites, and direct user add
+- risk-register CRUD, optimistic concurrency, audit events, and org-unit scoping
+- versioned 3x3/5x5 scoring models, immutable inherent/residual assessments, authorised heatmap
+- treatment strategies, actions, approval stages, separation of duties, transactional outbox
+- role-based dashboards and authorised aggregates (`packages/analytics`): KPI, heatmap, categories, monthly trends, overdue actions, scoped CSV export
+- dynamic forms (`packages/form-engine`): tenant definitions, immutable published versions, AST conditions, metadata-driven renderer
+- module registry (`packages/module-registry`): catalogue, platform entitlements, tenant switches, dependencies, API-layer enablement
+- organization tree, role permission matrix, and locale/branding (`packages/auth`)
+- WCAG 2.2 AA hardening, global risk search, list indexes, and `Server-Timing` (Sprint 11). Measurements: `docs/PERFORMANCE.md`, accessibility: `docs/ACCESSIBILITY.md`.
+- Category-based standard guidance (ISO 31000/27001/45001, NIST CSF 2.0, occupational safety) in the register, assessment, and treatment. Not a compliance-mapping module: `docs/STANDARDS.md`.
+- Sprint 12: `GET /ready`, mutation rate limits, CSP/HSTS, backup/restore drill, tenant export/offboarding, incident and deploy runbooks. Monitoring without Sentry/OTel. Go/no-go: `docs/GO_NO_GO.md`.
 
-Ei toteutettu (tietoisesti):
+Intentionally not implemented:
 
-- oikea S3/MinIO, Sentry, OpenTelemetry
+- real S3/MinIO, Sentry, OpenTelemetry
 
-## Sovellusrajat
+## Application boundaries
 
 ```
-apps/web            HTTP, reitit, UI
-apps/worker         taustatyöt (BullMQ, outbox, muistutukset)
+apps/web            HTTP, routes, UI
+apps/worker         background jobs (BullMQ, outbox, reminders)
 packages/ui         design system (React)
-packages/shared     API-envelopet, slug-validointi
-packages/tenant     tenant-sopimus
-packages/permissions oikeusavaimet, default deny
-packages/database   Prisma, RLS, tenant-transaktio
-packages/auth       OIDC-subjektit, jäsenyys, RBAC-auttajat
-packages/risk-engine pisteytys, arvioinnit ja riskirekisterin palvelu
-packages/form-engine lomakemäärittelyt ja AST
-packages/module-registry moduilikatalogi
-packages/workflow-engine versionoidut työnkulut (myöhemmin)
-packages/analytics  valtuutetut aggregaatit
-modules/*           kytkettävien ominaisuuksien paikat (katalogi Sprint 09)
+packages/shared     API envelopes, slug validation
+packages/tenant     tenant contract
+packages/permissions permission keys, default deny
+packages/database   Prisma, RLS, tenant transaction
+packages/auth       OIDC subjects, membership, RBAC helpers
+packages/risk-engine scoring, assessments, risk-register service
+packages/form-engine form definitions and AST
+packages/module-registry module catalogue
+packages/workflow-engine versioned workflows (later)
+packages/analytics  authorised aggregates
+modules/*           placeholders for optional features (catalogue Sprint 09)
 ```
 
-`apps/web` omistaa reitit. Domain-paketit eivät importoi Reactia. Raakaa Prisma-asiakasta ei altisteta reittikäsittelijöille.
+`apps/web` owns routes. Domain packages do not import React. A raw Prisma client is not exposed to route handlers.
 
-## Tenant-konteksti
+## Tenant context
 
-Tenant päätellään todennetusta jäsenyydestä ja tarkistetaan reitin `tenantSlug`-arvoa vasten. JSON-bodyn tenant-tunnisteeseen ei luoteta. `/t/[tenantSlug]` vaatii aktiivisen jäsenyyden. Tietokantakyselyt tenant-dataan kulkevat `withTenant`-kääreen kautta.
+Tenant is derived from verified membership and checked against the route `tenantSlug`. A tenant id in a JSON body is never trusted. `/t/[tenantSlug]` requires an active membership. Queries against tenant data go through the `withTenant` wrapper.
 
-Tietokantayhteyksissä (Sprint 02) tenant asetetaan **transaktion sisällä**:
+On database connections (Sprint 02) tenant is set **inside the transaction**:
 
 ```sql
 SET LOCAL app.tenant_id = '<uuid>';
 ```
 
-Session-tason `SET` on kielletty pooled-yhteyksissä.
+Session-level `SET` is forbidden on pooled connections.
 
-## Tietovuo (tavoitetila)
+## Data flow (target)
 
-1. Selain kutsuu `/api/v1/tenants/:slug/...` sessiokeksillä.
-2. Palvelin varmistaa istunnon, jäsenyyden, oikeuden ja org-yksikkörajoitteen.
-3. Palvelukerros avaa tenant-transaktion ja käyttää Prismaa RLS:n alla.
-4. Kirjoitukset tuottavat audit- ja outbox-tapahtumat samassa transaktiossa.
-5. Worker lukee käsittelemättömän outboxin `app.worker_poll`-kontekstissa, sitten avaa `withTenant` outbox-rivin tenantista (ei käyttäjältä). Moduuli tarkistetaan ennen sivuvaikutuksia. Ilmoitusten `dedupeKey` tekee uudelleenyrityksistä idempotentteja.
+1. The browser calls `/api/v1/tenants/:slug/...` with a session cookie.
+2. The server verifies session, membership, permission, and org-unit constraint.
+3. The service layer opens a tenant transaction and uses Prisma under RLS.
+4. Writes emit audit and outbox events in the same transaction.
+5. The worker reads unprocessed outbox under `app.worker_poll`, then opens `withTenant` from the outbox row tenant (not from the user). The module is checked before side effects. Notification `dedupeKey` makes retries idempotent.
 
-## UI-reitit
+## UI routes
 
-Käyttöliittymä elää polun `/t/[tenantSlug]` alla: `home`, `risks`, `actions`, `analytics`, `incidents` ja `settings/*`. Auth-reitit: `/login`, `/tenants`, `/invite/[token]`.
+The UI lives under `/t/[tenantSlug]`: `home`, `risks`, `actions`, `analytics`, `incidents`, and `settings/*`. Auth routes: `/login`, `/tenants`, `/invite/[token]`.
 
-## Julkaisuportit
+## Release gates
 
-- Prototype (Sprint 01): kuori ja navigaatio, ei autentikointilupauksia
-- Sisäinen alpha (Sprintit 1–5): tenant-turvallinen risk CRUD ja arvioinnit
-- Feature-complete beta (Sprintit 1–10)
-- Pilot-valmis MVP (Sprintit 1–12)
+- Prototype (Sprint 01): shell and navigation, no authentication promises
+- Internal alpha (Sprints 1–5): tenant-safe risk CRUD and assessments
+- Feature-complete beta (Sprints 1–10)
+- Pilot-ready MVP (Sprints 1–12)

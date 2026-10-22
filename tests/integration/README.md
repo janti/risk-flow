@@ -1,3 +1,3 @@
 # Integration tests
 
-Tenant-eristys (SELECT/INSERT/UPDATE/DELETE, liitokset, aggregaatit, pool-vuoto, audit append-only ja org-yksikön sykli) testataan tiedostossa `packages/database/src/tenant-isolation.test.ts`. Jäsenyys, RBAC ja kutsut: `packages/auth/src/access.test.ts` ja `memberships.test.ts`. Testit kuuluvat `pnpm test` -putkeen.
+Tenant isolation (SELECT/INSERT/UPDATE/DELETE, joins, aggregates, pool leak, audit append-only, and org-unit cycles) is tested in `packages/database/src/tenant-isolation.test.ts`. Membership, RBAC, and invites: `packages/auth/src/access.test.ts` and `memberships.test.ts`. Tests run in the `pnpm test` pipeline.

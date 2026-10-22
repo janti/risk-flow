@@ -1,34 +1,34 @@
 # Design system
 
-Jaettu UI elää paketissa `@riskflow/ui`. Sovellus tuo komponentit sieltä; Tailwind-teema ja CSS-muuttujat ovat samassa paketissa.
+Shared UI lives in `@riskflow/ui`. The app imports components from there; the Tailwind theme and CSS variables are in the same package.
 
-## Periaatteet
+## Principles
 
-- Semanttinen typografia: `h1`–`h3`, muted-kuvaukset, `PageHeader`
-- Vaalea ja tumma teema (`next-themes`, class-strategia)
-- Tyhjä, lataus- ja virhetila jokaisessa näkymässä
-- Näppäimistö: näkyvä fokus, skip-linkki (`#main-content`), Esc sulkee mobiilisivupalkin, fokus palaa avauspainikkeeseen
-- Taulukot: caption + `scope`, mobiilissa korttilista kun sarakkeita on paljon
-- Haku: globaali combobox (`/`-pikanäppäin)
-- Labelit, `aria-expanded` / `aria-controls` mobiilivalikossa
-- Tenant-vaihtaja listaa vain todennetut jäsenyydet
+- Semantic typography: `h1`–`h3`, muted descriptions, `PageHeader`
+- Light and dark theme (`next-themes`, class strategy)
+- Empty, loading, and error states in every view
+- Keyboard: visible focus, skip link (`#main-content`), Esc closes the mobile sidebar, focus returns to the opener
+- Tables: caption + `scope`; card list on mobile when there are many columns
+- Search: global combobox (`/` shortcut)
+- Labels, `aria-expanded` / `aria-controls` on the mobile menu
+- Tenant switcher lists only verified memberships
 
-## Sprint 01 -komponentit
+## Sprint 01 components
 
 `Button`, `Badge`, `Skeleton`, `Separator`, `Sheet`, `AppShell`, `SideNavigation`, `TenantSwitcher`, `Breadcrumbs`, `PageHeader`, `EmptyState`, `ErrorState`, `StatusBadge`, `ThemeToggle`, `PrototypeBanner`, `PermissionGate`.
 
-## Teema
+## Theme
 
-Värit ovat CSS-muuttujia (`--background`, `--primary`, `--risk-low` … `--risk-critical`). Sprint 05 käyttää luokitusvärejä matriisissa ja arviointien `StatusBadge`-näytössä.
+Colors are CSS variables (`--background`, `--primary`, `--risk-low` … `--risk-critical`). Sprint 05 uses rating colors in the matrix and assessment `StatusBadge` display.
 
-## Myöhemmät komponentit
+## Later components
 
-Riski: `RiskTable`, `RiskFilterBar`, `RiskForm`, `RiskAssessmentPanel`, `RiskMatrix`, `RiskTreatmentPanel`, `RiskActionList` (Sprint 04–06), `RiskFormRenderer` (Sprint 08). Myöhemmin: `RiskHistory`.
+Risk: `RiskTable`, `RiskFilterBar`, `RiskForm`, `RiskAssessmentPanel`, `RiskMatrix`, `RiskTreatmentPanel`, `RiskActionList` (Sprints 04–06), `RiskFormRenderer` (Sprint 08). Later: `RiskHistory`.
 
-Toimenpiteet: `ActionsBoard` (omat tehtävät ja lista).
+Actions: `ActionsBoard` (own tasks and list).
 
-Hallinta: `MemberInviteDialog`, `MemberAddDialog`, `OrganizationTree`, `RolePermissionMatrix`, `ModuleToggleList`. Lomakkeet: `FormList`, `FormEditor` (kenttäpaletti, raahausjärjestys, ominaisuuspaneeli, ehdolliset säännöt, esikatselu, julkaisu).
+Admin: `MemberInviteDialog`, `MemberAddDialog`, `OrganizationTree`, `RolePermissionMatrix`, `ModuleToggleList`. Forms: `FormList`, `FormEditor` (field palette, drag order, property pane, conditional rules, preview, publish).
 
-Analytiikka: `KpiCard`, `AnalyticsBoard` (KPI, heatmap, kategoriat, trendit, myöhässä olevat), `EmployeeHome`, `DashboardFilterBar`.
+Analytics: `KpiCard`, `AnalyticsBoard` (KPI, heatmap, categories, trends, overdue), `EmployeeHome`, `DashboardFilterBar`.
 
-Näitä ei toteuteta Sprint 01:ssä.
+These were not implemented in Sprint 01.

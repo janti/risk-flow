@@ -1,44 +1,44 @@
-# Suorituskyky (Sprint 11)
+# Performance (Sprint 11)
 
-Mittaukset ilman OpenTelemetryä tai Sentryä. API-listat palauttavat `Server-Timing` (`listRisks`, `overview`) ja `meta.durationMs`.
+Measurements without OpenTelemetry or Sentry. API lists return `Server-Timing` (`listRisks`, `overview`) and `meta.durationMs`.
 
-## Budjetit
+## Budgets
 
-| Mittari | Budjetti | Huomio |
+| Metric | Budget | Note |
 |---|---|---|
-| `GET /risks` (limit 25, seed + indeksit) | p95 &lt; 200 ms palvelin | `Server-Timing: listRisks` |
-| `GET /analytics/overview` (12 kk) | p95 &lt; 500 ms palvelin | valtuutettu aggregaatti |
-| Riskilistan ensimmäinen sivu | keyset, ei offset | `created_at, id` |
-| Dashboardin myöhässä-lista | max 25 riviä | KPI on erillinen `count` |
+| `GET /risks` (limit 25, seed + indexes) | p95 &lt; 200 ms server | `Server-Timing: listRisks` |
+| `GET /analytics/overview` (12 months) | p95 &lt; 500 ms server | authorised aggregate |
+| First page of the risk list | keyset, not offset | `created_at, id` |
+| Dashboard overdue list | max 25 rows | KPI is a separate `count` |
 
-## Indeksit (migraatio `20261022400000_sprint_11_query_indexes`)
+## Indexes (migration `20261022400000_sprint_11_query_indexes`)
 
-- `risks_tenant_created_idx` `(tenant_id, created_at, id)` — oletusjärjestys
+- `risks_tenant_created_idx` `(tenant_id, created_at, id)` — default order
 - `risks_tenant_org_unit_idx`, `risks_tenant_owner_idx`, `risks_tenant_category_idx`
 - `risk_assessments_type_assessed_idx`
-- `pg_trgm` + `btree_gin`: `risks_title_trgm_idx` `(tenant_id, title)`, `risks_code_trgm_idx` `(tenant_id, code)` ILIKE-haulle
+- `pg_trgm` + `btree_gin`: `risks_title_trgm_idx` `(tenant_id, title)`, `risks_code_trgm_idx` `(tenant_id, code)` for ILIKE search
 
-Suunnitelmat varmennetaan testissä `packages/database/src/query-plan.test.ts` (2000 lisäriviä + seed). Listan `LIMIT 26` käyttää `risks_tenant_created_idx`. GIN-indeksit ovat paikallaan; noin 2k rivin tenantissa PostgreSQL voi yhä suodattaa ILIKE:n heapista tenant-btreen jälkeen, koska se on halvempaa kuin GIN. GIN tulee edulliseksi suuremmilla aineistoilla.
+Plans are verified in `packages/database/src/query-plan.test.ts` (2000 extra rows + seed). List `LIMIT 26` uses `risks_tenant_created_idx`. GIN indexes are in place; on a ~2k-row tenant PostgreSQL may still filter ILIKE from the heap after the tenant btree because that is cheaper than GIN. GIN becomes cheaper on larger datasets.
 
-## Paikalliset mittaukset
+## Local measurements
 
-Arvot täytetään `packages/database/src/query-plan.test.ts` -ajon jälkeen (seed + 2000 lisäriskiä, paikallinen PostgreSQL):
+Values filled after `packages/database/src/query-plan.test.ts` (seed + 2000 extra risks, local PostgreSQL):
 
-| Kysely | Tavoite | Tulos |
+| Query | Target | Result |
 |---|---|---|
-| Lista `ORDER BY created_at DESC, id DESC LIMIT 26` | &lt; 200 ms | alle 200 ms (query-plan-testi) |
-| ILIKE-haku `%trgmneedle%` LIMIT 26 | &lt; 200 ms | alle 200 ms (query-plan-testi) |
-| HTTP `GET /risks?limit=25` | p95 &lt; 200 ms | `listRisks;dur=10` Acme-seedillä |
-| Suunnitelma, lista | `risks_tenant_created_idx` | vahvistettu |
-| Suunnitelma, haku | GIN-indeksit olemassa; 2k rivillä heap-suodatus voi voittaa | indeksit varmennettu |
+| List `ORDER BY created_at DESC, id DESC LIMIT 26` | &lt; 200 ms | under 200 ms (query-plan test) |
+| ILIKE search `%trgmneedle%` LIMIT 26 | &lt; 200 ms | under 200 ms (query-plan test) |
+| HTTP `GET /risks?limit=25` | p95 &lt; 200 ms | `listRisks;dur=10` on Acme seed |
+| Plan, list | `risks_tenant_created_idx` | confirmed |
+| Plan, search | GIN indexes present; at 2k rows heap filter may win | indexes verified |
 
-HTTP-taso (`Server-Timing`) mitataan selaimessa kehityspalvelimelta; se sisältää auth- ja RLS-kääreen.
+HTTP-level (`Server-Timing`) is measured in the browser against the dev server; it includes the auth and RLS wrapper.
 
-Paikallinen mittaus 2026-10-22 (Acme, seed, kehityspalvelin): `GET /api/v1/tenants/acme/risks?limit=25` → `Server-Timing: listRisks;dur=10` (`meta.durationMs` 10). Budjetti 200 ms täyttyy.
+Local measurement 2026-10-22 (Acme, seed, dev server): `GET /api/v1/tenants/acme/risks?limit=25` → `Server-Timing: listRisks;dur=10` (`meta.durationMs` 10). The 200 ms budget is met.
 
-## Query-analyysi
+## Query analysis
 
-Tyypillinen listakysely:
+Typical list query:
 
 ```sql
 SELECT id FROM risks
@@ -47,7 +47,7 @@ ORDER BY created_at DESC, id DESC
 LIMIT 26;
 ```
 
-Haku:
+Search:
 
 ```sql
 SELECT id FROM risks
@@ -55,15 +55,15 @@ WHERE tenant_id = $1 AND (title ILIKE '%q%' OR code ILIKE '%q%')
 LIMIT 26;
 ```
 
-RLS (`app.tenant_id`) on yhä voimassa; indeksit sisältävät `tenant_id`:n.
+RLS (`app.tenant_id`) still applies; indexes include `tenant_id`.
 
-## Aggregaatit
+## Aggregates
 
-Overview valitsee vain KPI/heatmap-kentät (`id, status, categoryId, createdAt, category`). Myöhässä olevat toimenpiteet sivutetaan 25 riviin; kokonaismäärä tulee `count`-kyselystä.
+Overview selects only KPI/heatmap fields (`id, status, categoryId, createdAt, category`). Overdue actions are paged to 25 rows; the total comes from a `count` query.
 
-## Avoimet rajat
+## Open limits
 
-- Heatmap tarvitsee viimeisimmät arvioinnit per riski; erittäin suurilla tenanteilla (&gt;50k riskiä) tämä pitää hajauttaa.
-- CSV/PDF-vienti sivuttaa 100 rivin erissä mutta on yhä synkroninen HTTP.
-- Redis 5.0 on paikallinen; BullMQ suosittelee 6.2+.
-- Server-Timingin lisäksi ei ole selain-RUM-mittausta (tietoinen: ei Sentryä/OTeliä).
+- Heatmap needs the latest assessments per risk; at very large tenants (&gt;50k risks) this must be split.
+- CSV/PDF export pages in 100-row batches but is still synchronous HTTP.
+- Redis 5.0 is local; BullMQ recommends 6.2+.
+- There is no browser RUM beyond Server-Timing (intentional: no Sentry/OTel).

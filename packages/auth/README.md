@@ -1,9 +1,9 @@
 # @riskflow/auth
 
-Auth.js-istunnon ja tenant-jäsenyyden palvelinlogiikka. Paketti ei riipu Reactista eikä vie valeistuntoja.
+Server logic for the Auth.js session and tenant membership. The package does not depend on React and does not export fake sessions.
 
-- Identiteetti (`authSubject`) ei tarkoita tenant-pääsyä.
-- `loadTenantAccess` palauttaa `null`, jos jäsenyys puuttuu tai on peruttu.
-- Alustan ylläpitäjä (`platformAdmin`) ei saa automaattista lukuoikeutta tenant-dataan.
-- Kutsutokenit tallennetaan vain tiivisteinä.
-- Paikallinen kehitys käyttää `http://127.0.0.1:3000` (ei `localhost`) OIDC `redirect_uri`-osoitteena, jotta Auth.js ja oidc-provider pysyvät samassa originissa.
+- Identity (`authSubject`) does not imply tenant access.
+- `loadTenantAccess` returns `null` if membership is missing or revoked.
+- A platform administrator (`platformAdmin`) does not get automatic read access to tenant data.
+- Invite tokens are stored as hashes only.
+- Local development uses `http://127.0.0.1:3000` (not `localhost`) as the OIDC `redirect_uri` so Auth.js and oidc-provider stay on the same origin.

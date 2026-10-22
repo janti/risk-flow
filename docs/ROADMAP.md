@@ -1,20 +1,20 @@
 # Roadmap
 
-Kaksitoista kahden viikon sprinttiä. Jokainen sprintti edellyttää edellisen porteista selviämistä.
+Twelve two-week sprints. Each sprint requires the previous gates to pass.
 
-| Sprintti | Sisältö | Tila |
+| Sprint | Scope | Status |
 |---|---|---|
-| 01 | Repo, CI, design system | Valmis |
-| 02 | PostgreSQL-skeema ja RLS | Valmis |
-| 03 | Identiteetti, jäsenyydet, RBAC/ABAC | Valmis |
-| 04 | Riskirekisterin CRUD | Valmis |
-| 05 | Arvioinnit ja pisteytys | Valmis |
-| 06 | Toimenpiteet, käsittelyt, hyväksynnät | Valmis |
-| 07 | Roolipohjaiset dashboardit | Valmis |
-| 08 | Dynaamiset lomakkeet | Valmis |
-| 09 | Moduulit, asetukset, organisaatio | Valmis |
-| 10 | Liitteet, ilmoitukset, viennit, audit | Valmis |
-| 11 | UX, saavutettavuus, suorituskyky | Valmis |
-| 12 | Turvallisuus, pilotti, deploy | Valmis |
+| 01 | Repo, CI, design system | Done |
+| 02 | PostgreSQL schema and RLS | Done |
+| 03 | Identity, memberships, RBAC/ABAC | Done |
+| 04 | Risk-register CRUD | Done |
+| 05 | Assessments and scoring | Done |
+| 06 | Actions, treatments, approvals | Done |
+| 07 | Role-based dashboards | Done |
+| 08 | Dynamic forms | Done |
+| 09 | Modules, settings, organization | Done |
+| 10 | Attachments, notifications, exports, audit | Done |
+| 11 | UX, accessibility, performance | Done |
+| 12 | Security, pilot, deploy | Done |
 
-Promptit, riippuvuudet ja hyväksymiskriteerit: `docs/RISKFLOW_CURSOR_IMPLEMENTATION.md`.
+Prompts, dependencies, and acceptance criteria: `docs/RISKFLOW_CURSOR_IMPLEMENTATION.md`.

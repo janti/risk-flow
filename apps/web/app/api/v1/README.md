@@ -1,3 +1,3 @@
 # API v1
 
-Liiketoimintaendpointit toteutetaan Sprint 04:stä eteenpäin. Tenant-tunnistetta ei koskaan luoteta JSON-bodysta. Health-tarkistus on osoitteessa `GET /health`.
+Business endpoints are implemented from Sprint 04 onward. A tenant id in a JSON body is never trusted. Health check is `GET /health`.

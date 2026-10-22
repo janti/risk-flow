@@ -1,29 +1,29 @@
 # Go / no-go (Sprint 12)
 
-Päätös: **ehdollinen GO suljetulle pilotille**. Ei GO avoimelle internet-tuotannolle ennen riippumatonta pentestiä.
+Decision: **conditional GO for a closed pilot**. Not GO for open internet production before an independent pentest.
 
-RiskFlow **ei väitä** ISO 27001-, ISO 45001- tai muuta compliance-sertifiointia.
+RiskFlow **does not claim** ISO 27001, ISO 45001, or any other compliance certification.
 
-## Hyväksymiskriteerit
+## Acceptance criteria
 
-| Kriteeri | Tulos |
+| Criterion | Result |
 |---|---|
-| Ei tiedossa olevia kriittisiä/high-koodihaavoittuvuuksia | Täyttyy kontrollilistan perusteella; ulkoista pentestiä ei ole |
-| Backup restore todistettu | `pnpm ops:restore-drill` (canary-rivin poisto ja palautus dumpista) |
-| Rollback harjoiteltu | Palautus edelliseen artefaktiin + dump, ks. `docs/DEPLOY.md` |
-| Kaksi pilottitenanttia ilman suoria DB-jäsenlisäyksiä | acme ja globex; käyttäjät UI/OIDC-kutsulla tai suoralla lisäyksellä |
+| No known critical/high code vulnerabilities | Met on the control checklist; no external pentest |
+| Backup restore proven | `pnpm ops:restore-drill` (canary row delete and restore from dump) |
+| Rollback rehearsed | Restore previous artefact + dump, see `docs/DEPLOY.md` |
+| Two pilot tenants without direct DB membership inserts | acme and globex; users via UI/OIDC invite or direct add |
 
-## GO suljetulle pilotille jos
+## GO for a closed pilot if
 
-- Stagingissa `/health` ja `/ready` ovat vihreät
-- RLS- ja e2e-testit vihreät
-- Restore-drill on ajettu onnistuneesti
-- Salaisuudet eivät sisällä `dev_only`
-- Kaksi tenanttia kirjautuvat ristiin-estolla
+- Staging `/health` and `/ready` are green
+- RLS and e2e tests are green
+- Restore drill has been run successfully
+- Secrets do not contain `dev_only`
+- Two tenants sign in with cross-access blocked
 
-## NO-GO jos
+## NO-GO if
 
-- Tenant-eristys hajoaa
-- `/ready` paljastaa salaisuuksia tai jää 503:een ilman syytä
-- Varmuuskopiota ei voi palauttaa
-- Tuotantoon yritetään paikallista seed-dataa tai `dev_only`-salaisuuksia
+- Tenant isolation breaks
+- `/ready` leaks secrets or stays 503 without cause
+- Backup cannot be restored
+- Local seed data or `dev_only` secrets are used in production

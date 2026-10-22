@@ -1,28 +1,28 @@
-# Tietoturvapoikkeaman runbook
+# Security incident runbook
 
-## Luokittelu
+## Classification
 
-- P1: tenant-eristyksen rikkoutuminen, tietovuoto, autentikoinnin ohitus
-- P2: palvelun katko, massamittainen 500, worker jumissa
-- P3: yksittäisen käyttäjän regressio
+- P1: tenant isolation broken, data leak, authentication bypass
+- P2: service outage, mass 500s, worker stuck
+- P3: single-user regression
 
-## Ensimmäiset 15 minuuttia
+## First 15 minutes
 
-1. Vahvista havainto `/health`, `/ready` ja lokeista. Älä paljasta ympäristömuuttujia vastauksissa.
-2. Tallenna `x-request-id` ja aikaleima.
-3. Jos epäillään tenant-vuotoa: katkaise kirjoitukset (maintenance / worker stop), älä korjaa dataa SQL-päivityksellä auditiin.
-4. Ilmoita alustan omistajalle. Tenant-adminille kerrotaan vaikutus, ei toisen tenantin tietoja.
+1. Confirm the finding with `/health`, `/ready`, and logs. Do not leak environment variables in responses.
+2. Record `x-request-id` and timestamp.
+3. If a tenant leak is suspected: stop writes (maintenance / worker stop). Do not repair data with SQL updates to audit.
+4. Notify the platform owner. Tell the tenant admin the impact, not another tenant's data.
 
-## Eristys ja toipuminen
+## Containment and recovery
 
-- Palauta edellinen tunnettu versio (`docs/DEPLOY.md`).
-- Säilytä `audit_events` (append-only). App/worker eivät voi DELETE/UPDATE.
-- Liitteet: älä jaa allekirjoitettuja URL:ia lokeihin; ne vanhenevat.
-- Rate limit 429 ei ole poikkeama, mutta äkillinen piikki on.
+- Restore the last known-good version (`docs/DEPLOY.md`).
+- Preserve `audit_events` (append-only). App/worker cannot DELETE/UPDATE.
+- Attachments: do not share signed URLs in logs; they expire.
+- Rate limit 429 is not an incident, but a sudden spike is.
 
-## Jälkitoimet
+## Follow-up
 
-1. Kirjaa aikajana, vaikutetut tenantit (slug, ei sisältöä) ja korjaus.
-2. Aja RLS-negatiiviset testit: `pnpm --filter @riskflow/database test`.
-3. Päivitä `docs/PENTEST.md` jos kontrolli puuttui.
-4. Älä väitä sertifiointia (ISO 27001 tms.) tämän runbookin perusteella.
+1. Record a timeline, affected tenants (slug, not content), and the fix.
+2. Run RLS negatives: `pnpm --filter @riskflow/database test`.
+3. Update `docs/PENTEST.md` if a control was missing.
+4. Do not claim certification (ISO 27001 or similar) on the basis of this runbook.

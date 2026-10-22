@@ -1,3 +1,3 @@
 # features/assessments
 
-Arvioinnit ja pisteytysmallit Sprint 05:ssä.
+Assessments and scoring models in Sprint 05.

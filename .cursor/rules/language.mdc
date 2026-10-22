@@ -3,6 +3,8 @@ description: Language conventions for RiskFlow
 alwaysApply: true
 ---
 
-Use Finnish for explanations, README files, and documentation under `docs/`.
+Use English for explanations, README files, and documentation under `docs/`.
 
 Use English for source code, identifiers, file names, database fields, API paths, permission keys, and code comments that describe implementation.
+
+The product UI is localized (Finnish, Swedish, English). Message catalogs live in `packages/shared`.

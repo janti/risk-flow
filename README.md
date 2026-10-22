@@ -39,7 +39,7 @@ RiskFlow is a tenant-isolated application for recording, assessing, treating, an
 | Files | Private object storage, server-generated tenant-prefixed keys, expiring signed URLs |
 | Guidance | Category packs (OHS, cyber, compliance, finance) mapped to ISO 31000 / 45001 / 27001, NIST CSF 2.0, Finnish OSH sources — guidance, not a control library |
 
-UI languages: Finnish, Swedish, English. Source identifiers, API paths, and schema fields are English. Architecture and ops documents under `docs/` are Finnish.
+The product UI is localized (Finnish, Swedish, English). Source identifiers, API paths, schema fields, README files, and `docs/` are English.
 
 ## Tech stack
 
@@ -248,7 +248,7 @@ Alerts should hook reverse-proxy 5xx and `GET /ready` returning `503`. Rollback 
 
 ## Documentation
 
-Finnish docs under `docs/`:
+Docs under `docs/`:
 
 | Doc | Topic |
 |---|---|

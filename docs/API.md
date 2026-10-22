@@ -1,16 +1,16 @@
 # API
 
-Kanta: `/api/v1`. Vastausmuoto `{ data, meta }`, virheet `{ error: { code, message, details?, requestId } }`.
+Base: `/api/v1`. Success envelope `{ data, meta }`, errors `{ error: { code, message, details?, requestId } }`.
 
-Julkinen health-reitti:
+Public health route:
 
-`GET /health` → `{ "data": { "status": "ok", "timestamp": "..." }, "meta": {} }` (liveness, ei riippuvuuksia)
+`GET /health` → `{ "data": { "status": "ok", "timestamp": "..." }, "meta": {} }` (liveness, no dependency checks)
 
-`GET /ready` → `{ "data": { "status": "ok", "timestamp": "...", "postgres": true, "redis": true }, "meta": {} }`. Jos PostgreSQL tai Redis ei vastaa: `503 service_unavailable` ilman ympäristömuuttujia.
+`GET /ready` → `{ "data": { "status": "ok", "timestamp": "...", "postgres": true, "redis": true }, "meta": {} }`. If PostgreSQL or Redis does not respond: `503 service_unavailable` without environment variables.
 
-Sprint 03 toteuttaa identiteetti- ja jäsenyysreitit. Sprint 04 lisää riskirekisterin. Sprint 05 lisää arvioinnit ja heatmapin. Sprint 06 lisää toimenpiteet, käsittelyt ja hyväksynnät. Sprint 07 lisää dashboard-aggregaatit ja scoped CSV-viennin. Sprint 08 lisää dynaamiset lomakkeet. Sprint 09 lisää moduulit, organisaation ja tenant-asetukset. Sprint 10 lisää liitteet, ilmoitukset, PDF-yhteenvedon ja audit-listan. Sopimus on jäädytetty:
+Sprint 03 implements identity and membership routes. Sprint 04 adds the risk register. Sprint 05 adds assessments and the heatmap. Sprint 06 adds actions, treatments, and approvals. Sprint 07 adds dashboard aggregates and scoped CSV export. Sprint 08 adds dynamic forms. Sprint 09 adds modules, organization, and tenant settings. Sprint 10 adds attachments, notifications, PDF summary, and the audit list. The contract is frozen:
 
-| Method | Endpoint | Oikeus |
+| Method | Endpoint | Permission |
 |---|---|---|
 | GET | /me | authenticated |
 | GET | /tenants/:slug/context | member |
@@ -38,94 +38,94 @@ Sprint 03 toteuttaa identiteetti- ja jäsenyysreitit. Sprint 04 lisää riskirek
 | GET | /tenants/:slug/exports/risks.csv | risk:read |
 | GET | /tenants/:slug/exports/risks.pdf | risk:read |
 
-Listakysely: `cursor`, `limit` (oletus 25, max 100), `status`, `categoryId`, `orgUnitId`, `ownerId`, `q`, `sort`. Keyset-sivutus. Tenant-slug tulee reitistä, ei bodysta.
+List query: `cursor`, `limit` (default 25, max 100), `status`, `categoryId`, `orgUnitId`, `ownerId`, `q`, `sort`. Keyset pagination. Tenant slug comes from the route, not the body.
 
-HTTP-koodit: 201 luonnissa, 400/422 virheellisessä syötteessä, 401, 403, 404, 409 rinnakkaisuudessa, 429 rate limit.
+HTTP codes: 201 on create, 400/422 on invalid input, 401, 403, 404, 409 on concurrency, 429 rate limit.
 
 ## Sprint 04
 
-Toteutetut riskireitit:
+Implemented risk routes:
 
-- `GET /tenants/:slug/risks` — `risk:read`, suodattimet ja keyset-sivutus (`meta.nextCursor`)
-- `POST /tenants/:slug/risks` — `risk:create`, koodi `R-nnn`, 201
-- `GET /tenants/:slug/risks/lookups` — kategoriat, yksiköt ja omistajat lomakkeille
+- `GET /tenants/:slug/risks` — `risk:read`, filters and keyset pagination (`meta.nextCursor`)
+- `POST /tenants/:slug/risks` — `risk:create`, code `R-nnn`, 201
+- `GET /tenants/:slug/risks/lookups` — categories, units, and owners for forms
 - `GET /tenants/:slug/risks/:id` — `risk:read`
-- `PATCH /tenants/:slug/risks/:id` — `risk:update`, vaatii `version`, vanhentunut versio → 409
-- `POST /tenants/:slug/risks/:id/archive` — `risk:archive`, vaatii `version`
+- `PATCH /tenants/:slug/risks/:id` — `risk:update`, requires `version`, stale version → 409
+- `POST /tenants/:slug/risks/:id/archive` — `risk:archive`, requires `version`
 
-Org-yksikkörajoitteinen jäsen ei näe eikä muuta rajauksen ulkopuolisia riskejä (404). Toisen tenantin tunniste ei vuoda (404).
+An org-unit-scoped member cannot see or change risks outside the scope (404). Another tenant's id does not leak (404).
 
-`POST /tenants/:slug/memberships` hyväksyy `mode: "invite"` (oletus) tai `mode: "direct"`. Suora lisäys luo jäsenyyden ilman kutsutokenia tai sähköpostia. Jos käyttäjää ei ole, syntyy pending-identiteetti, joka lunastetaan ensimmäisellä OIDC-kirjautumisella samalla sähköpostilla.
+`POST /tenants/:slug/memberships` accepts `mode: "invite"` (default) or `mode: "direct"`. Direct add creates a membership without an invite token or email. If the user does not exist, a pending identity is created and redeemed on the first OIDC sign-in with the same email.
 
 ## Sprint 05
 
-- `GET/POST /tenants/:slug/risks/:id/assessments` — `risk:read` / `risk:assess`. Arvioinnit ovat append-only. Palvelin laskee `score = likelihood * impact` ja `rating` valitun malliversion kynnyksillä.
-- `GET /tenants/:slug/risks/matrix` — `risk:read`, heatmap solusuodatusta varten
-- `GET /tenants/:slug/analytics/heatmap` — `analytics:read`, samat valtuutetut laskennat
-- Riskilista hyväksyy `assessmentType`, `likelihood` ja `impact` (viimeisin arviointi per tyyppi)
+- `GET/POST /tenants/:slug/risks/:id/assessments` — `risk:read` / `risk:assess`. Assessments are append-only. The server computes `score = likelihood * impact` and `rating` from the selected model version thresholds.
+- `GET /tenants/:slug/risks/matrix` — `risk:read`, heatmap for cell filtering
+- `GET /tenants/:slug/analytics/heatmap` — `analytics:read`, same authorised calculations
+- The risk list accepts `assessmentType`, `likelihood`, and `impact` (latest assessment per type)
 
-Historialliset arvioinnit säilyttävät malliversion, pistemäärän ja luokituksen, vaikka tenant julkaisisi uuden pisteytysmallin.
+Historical assessments keep model version, score, and rating even if the tenant publishes a new scoring model.
 
 ## Sprint 06
 
-- `GET/POST /tenants/:slug/risks/:id/treatments` — `risk:read` / `risk:update`. Yksi käsittely per riski. Strategiat `avoid|reduce|share|accept`. Hyväksyntä vaatii perustelun.
-- `POST /tenants/:slug/risks/:id/approvals` — `risk:approve`. Append-only-päätös. Tenantin `settings_json.separationOfDuties` estää oman lähetyksen hyväksynnän.
+- `GET/POST /tenants/:slug/risks/:id/treatments` — `risk:read` / `risk:update`. One treatment per risk. Strategies `avoid|reduce|share|accept`. Approval requires a rationale.
+- `POST /tenants/:slug/risks/:id/approvals` — `risk:approve`. Append-only decision. Tenant `settings_json.separationOfDuties` blocks approving one's own submission.
 - `GET/POST /tenants/:slug/risks/:id/actions` — `risk:read` / `action:assign`
-- `GET /tenants/:slug/actions` — `risk:read`, suodattimet `mine`, `overdue`, `status`
-- `PATCH /tenants/:slug/actions/:id` — `action:assign` päivitykseen, `action:complete` valmistumiseen
+- `GET /tenants/:slug/actions` — `risk:read`, filters `mine`, `overdue`, `status`
+- `PATCH /tenants/:slug/actions/:id` — `action:assign` for update, `action:complete` for completion
 
-Kirjoitukset tuottavat `audit_events`- ja `outbox_events`-rivit samassa transaktiossa. Worker ei käsittele outboxia tässä sprintissä.
+Writes emit `audit_events` and `outbox_events` in the same transaction. The worker does not process the outbox in this sprint.
 
 ## Sprint 07
 
-- `GET /tenants/:slug/analytics/overview` — `analytics:read`. Valtuutetut KPI:t, heatmap, kategoriat, kuukausitrendit ja myöhässä olevat toimenpiteet. Hakuehdot `from`, `to` (ISO-päivä, oletus 12 kk) ja `assessmentType`.
-- `GET /tenants/:slug/analytics/heatmap` — `analytics:read`, nykyinen valtuutettu matriisi ilman aikasuodatusta (Sprint 05).
-- `GET /tenants/:slug/exports/risks.csv` — `risk:read`, sama org-yksikkö- ja suodatuslogiikka kuin riskilistalla. Kaavat (`=`, `+`, `-`, `@`) neutralisoidaan.
-- Riskilista hyväksyy `createdFrom` ja `createdTo` dashboardin porautumiseen.
+- `GET /tenants/:slug/analytics/overview` — `analytics:read`. Authorised KPIs, heatmap, categories, monthly trends, and overdue actions. Query `from`, `to` (ISO date, default 12 months) and `assessmentType`.
+- `GET /tenants/:slug/analytics/heatmap` — `analytics:read`, current authorised matrix without time filter (Sprint 05).
+- `GET /tenants/:slug/exports/risks.csv` — `risk:read`, same org-unit and filter logic as the risk list. Formulas (`=`, `+`, `-`, `@`) are neutralized.
+- The risk list accepts `createdFrom` and `createdTo` for dashboard drill-down.
 
-Aggregaatit käyttävät samaa `visibleOrgUnitFilter`-predikaattia kuin listakyselyt. Visual dashboard builder ei kuulu MVP:hen.
+Aggregates use the same `visibleOrgUnitFilter` predicate as list queries. A visual dashboard builder is not in MVP.
 
 ## Sprint 08
 
-- `GET/POST /tenants/:slug/forms` — `form:manage`. Määrittelyt, uniikki `key` tenantissa.
-- `GET /tenants/:slug/forms/:id` — `form:manage`. Yksi määrittely versioineen.
-- `GET/POST /tenants/:slug/forms/:id/versions` — `form:manage`. Listaus ja luonnoksen get-or-create. Yksi luonnos kerrallaan; jos luonnos on jo, POST palauttaa sen.
-- `GET/PATCH /tenants/:slug/forms/:id/versions/:version` — `form:manage`. Luonnoksen tallennus ja migraatiovaikutuksen esikatselu. Julkaistua versiota ei voi PATCH:ata (409).
-- `POST /tenants/:slug/forms/:id/versions/:version/publish` — `form:manage`. Validointi ja julkaisu. Julkaistu rivi on muuttumaton.
+- `GET/POST /tenants/:slug/forms` — `form:manage`. Definitions, unique `key` per tenant.
+- `GET /tenants/:slug/forms/:id` — `form:manage`. One definition with versions.
+- `GET/POST /tenants/:slug/forms/:id/versions` — `form:manage`. List and get-or-create draft. One draft at a time; if a draft exists, POST returns it.
+- `GET/PATCH /tenants/:slug/forms/:id/versions/:version` — `form:manage`. Draft save and migration-impact preview. A published version cannot be PATCHed (409).
+- `POST /tenants/:slug/forms/:id/versions/:version/publish` — `form:manage`. Validation and publish. The published row is immutable.
 
-Ehdolliset säännöt ovat AST-ilmauksia (`equals`, `in`, `greaterThan`, `and`, `or`, `not`). Suoritettavat skriptit hylätään. Julkaistu skeema tulee täyttäjille `GET /tenants/:slug/risks/lookups` -vastauksen `publishedForm`-kentässä (`risk:read`), jotta risk-manager voi täyttää kentät ilman `form:manage`-oikeutta. Uusi riski sidotaan sillä hetkellä julkaistuun versioon (`form_version_id`). Päivitys ei vaihda versiota; historialliset tietueet renderöidään alkuperäisellä skeemalla.
+Conditional rules are AST expressions (`equals`, `in`, `greaterThan`, `and`, `or`, `not`). Executable scripts are rejected. The published schema is returned to fillers in `GET /tenants/:slug/risks/lookups` as `publishedForm` (`risk:read`) so a risk manager can fill fields without `form:manage`. A new risk is bound to the currently published version (`form_version_id`). Update does not change the version; historical records render with the original schema.
 
-Toisen tenantin lomaketunniste ei vuoda (404). Työntekijällä ei ole `form:manage`-oikeutta (403).
+Another tenant's form id does not leak (404). An employee does not have `form:manage` (403).
 
 ## Sprint 09
 
-- `GET/PATCH /tenants/:slug/modules` — `module:manage`. Katalogi, entitlementit ja kytkimet. Enable vaatii entitlementin ja riippuvuudet. Disable estetään, jos riippuva moduuli on päällä. Poiskytkentä ei poista tietueita.
-- `GET /tenants/:slug/incidents` — `risk:read` ja päällä oleva `incidents`-moduuli. Stub-lista. Pois kytkettynä `403 module_disabled`.
-- `GET/POST/PATCH /tenants/:slug/org-units` — `users:manage`. Organisaatiopuu. Sykli → 409.
-- `GET/PATCH /tenants/:slug/roles` — `users:manage`. Roolien oikeusmatriisi. Tenant-adminilta ei voi poistaa `users:manage` / `module:manage`.
-- `GET/PATCH /tenants/:slug/settings` — `users:manage`. Locale, aikavyöhyke ja branding. SoD-asetuksia ei ylikirjoiteta.
-- `GET /tenants/:slug/context` palauttaa vain **päällä olevat** moduuliavaimet.
+- `GET/PATCH /tenants/:slug/modules` — `module:manage`. Catalogue, entitlements, and switches. Enable requires entitlement and dependencies. Disable is blocked if a dependent module is on. Disablement does not delete records.
+- `GET /tenants/:slug/incidents` — `risk:read` and enabled `incidents` module. Stub list. When disabled: `403 module_disabled`.
+- `GET/POST/PATCH /tenants/:slug/org-units` — `users:manage`. Organization tree. Cycle → 409.
+- `GET/PATCH /tenants/:slug/roles` — `users:manage`. Role permission matrix. `users:manage` / `module:manage` cannot be removed from tenant-admin.
+- `GET/PATCH /tenants/:slug/settings` — `users:manage`. Locale, timezone, and branding. SoD settings are not overwritten.
+- `GET /tenants/:slug/context` returns only **enabled** module keys.
 
-Pois kytketty `risk-register` palauttaa `403 module_disabled` riski-, lomake- ja analytiikkareiteillä, ei vain navigaatiossa. Entitlementteja ei voi kirjoittaa tenant-adminina.
+A disabled `risk-register` returns `403 module_disabled` on risk, form, and analytics routes, not only in navigation. Entitlements cannot be written by a tenant admin.
 
 ## Sprint 10
 
-- `POST /tenants/:slug/attachments/upload-intent` — `risk:update`. Palvelin luo tenant-etuliitteisen avaimen ja 60 s voimassa olevan PUT-osoitteen. MIME-allowlist ja max 10 Mt. `.exe` hylätään.
-- `PUT /tenants/:slug/attachments/:id/content?exp=&sig=` — istunto + HMAC. Väärä tenant-avain tai vanhentunut allekirjoitus → 403/404. Tallennus kirjoittaa `attachment.uploaded`-outbox-rivin.
-- `GET /tenants/:slug/attachments/:id` — allekirjoitettu latausosoite. `pending_scan` → 409, `infected` → 403.
-- `GET /tenants/:slug/attachments/:id/content?exp=&sig=` — tiedostosisältö.
-- `GET /tenants/:slug/risks/:id/attachments` — `risk:read`, org-yksikkörajaus.
-- `GET /tenants/:slug/notifications` — jäsenen inbox, `unreadCount`, keyset-sivutus.
-- `PATCH /tenants/:slug/notifications/:id` — merkitse luetuksi. Toisen jäsenen rivi → 404.
-- `GET /tenants/:slug/audit-events` — `audit:read`, muuttumaton lista, `meta.nextCursor`.
-- `GET /tenants/:slug/exports/risks.pdf` — sama rajaus kuin CSV.
+- `POST /tenants/:slug/attachments/upload-intent` — `risk:update`. The server creates a tenant-prefixed key and a 60 s PUT URL. MIME allowlist and max 10 MB. `.exe` is rejected.
+- `PUT /tenants/:slug/attachments/:id/content?exp=&sig=` — session + HMAC. Wrong tenant key or expired signature → 403/404. Storage writes an `attachment.uploaded` outbox row.
+- `GET /tenants/:slug/attachments/:id` — signed download URL. `pending_scan` → 409, `infected` → 403.
+- `GET /tenants/:slug/attachments/:id/content?exp=&sig=` — file content.
+- `GET /tenants/:slug/risks/:id/attachments` — `risk:read`, org-unit scope.
+- `GET /tenants/:slug/notifications` — member inbox, `unreadCount`, keyset pagination.
+- `PATCH /tenants/:slug/notifications/:id` — mark read. Another member's row → 404.
+- `GET /tenants/:slug/audit-events` — `audit:read`, immutable list, `meta.nextCursor`.
+- `GET /tenants/:slug/exports/risks.pdf` — same scope as CSV.
 
-Worker (`DATABASE_URL_WORKER`) tyhjentää outboxin ja lähettää myöhässä-muistutukset. `dedupeKey` estää kaksoiskappaleet uudelleenyrityksessä. Pois kytketty moduuli merkitsee tapahtuman käsitellyksi ilman sivuvaikutuksia.
+The worker (`DATABASE_URL_WORKER`) drains the outbox and sends overdue reminders. `dedupeKey` prevents duplicates on retry. A disabled module marks the event processed without side effects.
 
 ## Sprint 11
 
-`GET /tenants/:slug/risks` ja `GET /tenants/:slug/analytics/overview` palauttavat `Server-Timing`-otsikon ja `meta.durationMs`. Haku `q` käyttää samoja oikeuksia kuin lista. Uusia endpointteja ei lisätty.
+`GET /tenants/:slug/risks` and `GET /tenants/:slug/analytics/overview` return a `Server-Timing` header and `meta.durationMs`. Search `q` uses the same permissions as the list. No new endpoints.
 
 ## Sprint 12
 
-Mutaatiot (`POST`/`PUT`/`PATCH`/`DELETE`) `/api/v1`:ssä palauttavat `429 rate_limited` ja `Retry-After`, kun IP-kohtainen raja ylittyy. Kirjautumistoiminto käyttää erillistä rajaa. Uusia liiketoimintaendpointteja ei lisätty.
+Mutations (`POST`/`PUT`/`PATCH`/`DELETE`) on `/api/v1` return `429 rate_limited` and `Retry-After` when the per-IP limit is exceeded. Login uses a separate limit. No new business endpoints.

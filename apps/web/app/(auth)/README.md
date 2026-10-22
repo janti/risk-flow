@@ -1,3 +1,3 @@
-# Auth-reitit
+# Auth routes
 
-Sprint 03 integroi Auth.js:n ja oikean OIDC-tarjoajan. Tähän ryhmään ei lisätä vale-kirjautumista tai mock-käyttäjiä.
+Sprint 03 integrates Auth.js with a real OIDC provider. This group does not add fake login or mock users.

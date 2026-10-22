@@ -1,3 +1,3 @@
 # features/admin
 
-Organisaatio, käyttäjät, roolit ja moduulit Sprinteissä 03 ja 09.
+Organization, users, roles, and modules in Sprints 03 and 09.

@@ -1,34 +1,34 @@
-# Saavutettavuus (Sprint 11)
+# Accessibility (Sprint 11)
 
-Tavoite: **WCAG 2.2 AA** työntekijä-, esimies- ja ylläpitäjäpoluilla. Uusia moduuleja ei lisätty.
+Target: **WCAG 2.2 AA** on employee, manager, and admin journeys. No new modules were added.
 
-## Korjaukset
+## Fixes
 
-- Skip-linkki siirtää fokuksen `#main-content`-elementtiin (`tabindex="-1"`).
-- Mobiilivalikko: `aria-expanded`, Esc sulkee, fokus palaa avauspainikkeeseen (Radix Sheet).
-- Lomakkeen luonti käyttää Sheet-dialogia (fokusansa, Esc), ei räätälöityä overlayta.
-- Taulukot: `caption`, `scope`, vaakavieritys. Riskilista on korteilla alle `md`-katkaisun.
-- Matriisisolut: `aria-label` ja `aria-pressed`.
-- Virhetila: `role="alert"` ja `aria-live="assertive"`.
-- Ilmoituskello: `aria-haspopup` / `aria-expanded`.
-- Globaali riskihaku (`/`) on combobox + listbox.
-- `prefers-reduced-motion` sammuttaa animaatiot.
-- `muted-foreground` tummennettu kontrastin vuoksi.
-- `html lang` seuraa käyttäjän kieltä.
+- Skip link moves focus to `#main-content` (`tabindex="-1"`).
+- Mobile menu: `aria-expanded`, Esc closes, focus returns to the opener (Radix Sheet).
+- Form create uses a Sheet dialog (focus trap, Esc), not a custom overlay.
+- Tables: `caption`, `scope`, horizontal scroll. The risk list is cards below the `md` breakpoint.
+- Matrix cells: `aria-label` and `aria-pressed`.
+- Error state: `role="alert"` and `aria-live="assertive"`.
+- Notification bell: `aria-haspopup` / `aria-expanded`.
+- Global risk search (`/`) is combobox + listbox.
+- `prefers-reduced-motion` disables animations.
+- `muted-foreground` darkened for contrast.
+- `html lang` follows the user language.
 
-## Testatut polut
+## Tested paths
 
-| Rooli | Polku | Mobiili |
+| Role | Path | Mobile |
 |---|---|---|
-| Employee | koti → omat toimenpiteet | kyllä |
-| Admin | skip-linkki, riskilista, haku `/` | kyllä (kortit) |
-| Admin | audit, ilmoitukset, lomakkeen luonti | osin |
+| Employee | home → own actions | yes |
+| Admin | skip link, risk list, search `/` | yes (cards) |
+| Admin | audit, notifications, form create | partial |
 
 Playwright: `tests/e2e/accessibility.spec.ts`, `tests/e2e/app-shell.spec.ts`.
 
-## Ei-kriittiset avoimet asiat
+## Non-critical open items
 
-- Automaattista axe-skannausta ei ole CI:ssä; manuaalinen ja Playwright-tarkistus.
-- Lomake-editorin raahaus vaatii näppäimistön (`@dnd-kit` KeyboardSensor), mutta kosketusruudun kohteet ovat tiheitä.
-- PDF-yhteenveto on ASCII-Helvetica; ruudunlukija ei lue ladattua PDF:ää.
-- Oikean S3:n ja ClamAV:n saavutettavuus ei kuulu tähän sprinttiin.
+- No automated axe scan in CI; manual and Playwright checks.
+- The form editor drag-and-drop supports keyboard (`@dnd-kit` KeyboardSensor), but touch targets are dense.
+- PDF summary is ASCII Helvetica; a screen reader does not read the downloaded PDF.
+- Accessibility of real S3 and ClamAV is out of this sprint.

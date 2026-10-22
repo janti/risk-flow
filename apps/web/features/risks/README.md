@@ -1,3 +1,3 @@
 # features/risks
 
-Riskirekisterin UI-komponentit ja palvelukutsut Sprint 04:ssä. Ei React-riippuvuutta domain-paketeissa.
+Risk-register UI components and service calls from Sprint 04. No React dependency in domain packages.
